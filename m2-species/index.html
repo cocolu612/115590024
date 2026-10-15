@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>M2 物種：廢棄物異生體 (Trash-born Organism) 3D 網頁原型</title>
+  <!-- p5.js library with WebGL 3D support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #0d0e12;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: #e0e0e6;
+    }
+    #canvas-container {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+    /* UI Overlay */
+    .hud {
+      position: absolute;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .hud-header {
+      top: 20px;
+      left: 24px;
+      background: rgba(18, 20, 26, 0.82);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 16px 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+      max-width: 380px;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: #3b4252;
+      color: #eceff4;
+      margin-bottom: 8px;
+    }
+    .badge.phase {
+      background: #81a1c1;
+      color: #2e3440;
+    }
+    h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #eceff4;
+      margin-bottom: 6px;
+      letter-spacing: 0.5px;
+    }
+    p.desc {
+      font-size: 12px;
+      color: #9aa2b5;
+      line-height: 1.5;
+      margin-bottom: 8px;
+    }
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .status-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #88c0d0;
+      box-shadow: 0 0 8px #88c0d0;
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    /* Floating action toolbar */
+    .hud-controls {
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(18, 20, 26, 0.88);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 40px;
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+      pointer-events: auto;
+    }
+    .btn {
+      background: #2e3440;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #e5e9f0;
+      padding: 8px 18px;
+      border-radius: 30px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .btn:hover {
+      background: #434c5e;
+      transform: translateY(-1px);
+    }
+    .btn.primary {
+      background: #bf616a;
+      border-color: #d08770;
+      color: #fff;
+    }
+    .btn.primary:hover {
+      background: #d08770;
+    }
+    .btn.active {
+      background: #88c0d0;
+      color: #2e3440;
+      border-color: #88c0d0;
+    }
+    .divider {
+      width: 1px;
+      height: 24px;
+      background: rgba(255, 255, 255, 0.15);
+    }
+    /* Instructions top right */
+    .hud-help {
+      top: 20px;
+      right: 24px;
+      background: rgba(18, 20, 26, 0.7);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 12px;
+      color: #8c95a6;
+      line-height: 1.6;
+    }
+    .kbd {
+      background: rgba(255, 255, 255, 0.12);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      color: #eceff4;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+
+  <!-- Header HUD -->
+  <div class="hud hud-header">
+    <span class="badge">NTHU OOP · M2 物種原型</span>
+    <span class="badge phase" id="badge-phase">地面蛇行中</span>
+    <h1>星際垃圾拼裝異生體 (Scrap Assemblage)</h1>
+    <p class="desc">
+      由廢棄星際沈積層的廢鐵板、破水管、機械鋼梁拼湊而成的非發光生物。具備<strong>不規則拆分解構</strong>與<strong>極速直矛破城衝撞</strong>特性。
+    </p>
+    <div class="status-row">
+      <div class="status-indicator" id="status-light"></div>
+      <span id="status-text">動態階段：地面 S 型蛇行巡弋</span>
+    </div>
+  </div>
+
+  <!-- Help HUD -->
+  <div class="hud hud-help">
+    <div>🖱️ <strong>滑鼠左鍵拖曳</strong>：旋轉 3D 視角 / 滾輪縮放</div>
+    <div>💥 <span class="kbd">X</span>：切換<strong>不規則身體拆分 / 聚合</strong></div>
+    <div>⚡ <span class="kbd">空白鍵 (Space)</span>：直身鎖定並極速衝撞</div>
+    <div>🎥 <span class="kbd">C</span>：切換鏡頭視角</div>
+  </div>
+
+  <!-- Interactive Controls Toolbar -->
+  <div class="hud-controls">
+    <button class="btn primary" id="btn-ram" title="立即鎖緊身體並直身衝撞">
+      ⚡ 立即大力衝撞 (Space)
+    </button>
+    <button class="btn" id="btn-split" title="將垃圾身體不規則拆散/重組">
+      💥 不規則拆分 (X)
+    </button>
+    <div class="divider"></div>
+    <button class="btn active" id="cam-orbit">自由視角 (Orbit)</button>
+    <button class="btn" id="cam-follow">跟隨視角 (Follow)</button>
+    <button class="btn" id="cam-action">特寫視角 (Cinematic)</button>
+    <div class="divider"></div>
+    <button class="btn" id="btn-pause">暫停 / 播放</button>
+  </div>
+
+  <script src="sketch.js"></script>
+</body>
+</html>

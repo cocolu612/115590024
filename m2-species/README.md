@@ -9,10 +9,10 @@
 
 ## 這一站要交的四件套
 
-- [ ] 程式碼：會動的雛形（`index.html` 與 `sketch.js`）
+- [x] 程式碼：會動的雛形（`index.html` 與 `sketch.js`，包含 Blender 模型 `trash_creature.blend`）
 - [ ] 截圖或影片：牠動起來的樣子
 - [ ] 反思：下面那段，一百到兩百字，自己寫
-- [ ] AI 揭露欄：下面的表格
+- [x] AI 揭露欄：下面的表格
 - [ ] 簡報 PDF：檔名 `m2-簡報.pdf`，放這個資料夾裡；物種設定書五欄也放這裡
 
 ## 反思
@@ -23,10 +23,10 @@
 
 | 項目 | 內容 |
 |------|------|
-| 工具 | （例：agy／Claude Code／Codex／未使用） |
-| 日期 | |
-| prompt 摘要 | |
-| 採用範圍 | （哪些碼、哪些想法來自 AI，你自己改了什麼） |
+| 工具 | agy (Antigravity CLI) / Blender 5.2 / p5.js (WebGL) |
+| 日期 | 2026/10/15 |
+| prompt 摘要 | 依據世界觀生成無發光星際垃圾拼裝生物、8節鉸接裝甲、地面靈活S型蛇行、直線蓄力、極速猛烈衝撞與不規則拆分解構動態 |
+| 採用範圍 | 協作生成 Blender 3D 骨架動畫模型 (`trash_creature.blend`) 與 p5.js 3D 互動網頁原型 (`index.html` / `sketch.js`) |
 
 ## 課前準備與物種日誌
 
