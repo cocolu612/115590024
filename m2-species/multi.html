@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>M2 物種：多群體生態與零件交換龍捲風原型 (Multi-creature & Vortex Fusion)</title>
+  <!-- p5.js library with WebGL 3D support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #0c0b0e;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: #e0e0e6;
+    }
+    #canvas-container {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+    /* UI Overlay */
+    .hud {
+      position: absolute;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .hud-header {
+      top: 20px;
+      left: 24px;
+      background: rgba(18, 16, 22, 0.88);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      padding: 16px 22px;
+      box-shadow: 0 8px 36px rgba(0, 0, 0, 0.6);
+      max-width: 460px;
+    }
+    .badge-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: #3b4252;
+      color: #eceff4;
+    }
+    .badge.phase {
+      background: #81a1c1;
+      color: #2e3440;
+      transition: background 0.3s;
+    }
+    .badge.tag {
+      background: #d08770;
+      color: #24140e;
+    }
+    .badge.vortex {
+      background: #b48ead;
+      color: #231828;
+    }
+    h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #eceff4;
+      margin-bottom: 6px;
+      letter-spacing: 0.5px;
+    }
+    p.desc {
+      font-size: 12px;
+      color: #aab2c5;
+      line-height: 1.55;
+      margin-bottom: 8px;
+    }
+    .creature-roster {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 6px;
+      margin-bottom: 8px;
+      font-size: 11px;
+      background: rgba(0, 0, 0, 0.28);
+      border-radius: 6px;
+      padding: 6px 10px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .roster-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .roster-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+    }
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      font-size: 12.5px;
+      font-weight: 600;
+    }
+    .status-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #88c0d0;
+      box-shadow: 0 0 8px #88c0d0;
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    /* Floating action toolbar */
+    .hud-controls {
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(18, 16, 24, 0.92);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 40px;
+      padding: 8px 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 42px rgba(0, 0, 0, 0.7);
+      pointer-events: auto;
+    }
+    .btn {
+      background: #2b2e38;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #e5e9f0;
+      padding: 8px 16px;
+      border-radius: 30px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .btn:hover {
+      background: #3e4454;
+      transform: translateY(-1px);
+    }
+    .btn.primary {
+      background: #bf616a;
+      border-color: #d08770;
+      color: #fff;
+    }
+    .btn.primary:hover {
+      background: #d08770;
+    }
+    .btn.vortex-btn {
+      background: #8f5d96;
+      border-color: #b48ead;
+      color: #fff;
+    }
+    .btn.vortex-btn:hover {
+      background: #b48ead;
+      color: #24142a;
+    }
+    .btn.active {
+      background: #88c0d0;
+      color: #2e3440;
+      border-color: #88c0d0;
+    }
+    .divider {
+      width: 1px;
+      height: 24px;
+      background: rgba(255, 255, 255, 0.15);
+    }
+    /* Instructions top right */
+    .hud-help {
+      top: 20px;
+      right: 24px;
+      background: rgba(18, 16, 22, 0.8);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 14px 18px;
+      font-size: 12px;
+      color: #9ba4b8;
+      line-height: 1.7;
+      max-width: 320px;
+    }
+    .kbd {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-family: monospace;
+      color: #eceff4;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+
+  <!-- Header HUD -->
+  <div class="hud hud-header">
+    <div class="badge-group">
+      <span class="badge">NTHU OOP · M2 多物種生態</span>
+      <span class="badge tag">群體協同巡弋</span>
+      <span class="badge vortex" id="badge-fusion">雙體守護中</span>
+      <span class="badge phase" id="badge-phase">正常生態漫遊</span>
+    </div>
+    <h1>垃圾碎屑異生體群 (Assemblage Swarm & Vortex)</h1>
+    <p class="desc">
+      場景容納多隻廢棄物異生體：<strong>1 隻自主獨行</strong>、<strong>2 隻並肩結伴巡弋</strong>；畫面中央駐紮<strong>2 隻核心守護體</strong>，具備<strong>零件解構高速纏繞龍捲風與交換繁衍</strong>特性。
+    </p>
+
+    <div class="creature-roster">
+      <div class="roster-item"><span class="roster-dot" style="background:#5e81ac"></span><strong>獨行者 (Solo)</strong>：自主漫遊、瞄準並極速撞散周圍垃圾堆</div>
+      <div class="roster-item"><span class="roster-dot" style="background:#a3be8c"></span><strong>伴行雙體 (Tandem Pair)</strong>：緊密並排蛇行、協同直線突進</div>
+      <div class="roster-item"><span class="roster-dot" style="background:#b48ead"></span><strong>中央雙體 (Center Pair)</strong>：按 <span class="kbd">M</span> 啟動龍捲風交換零件繁衍第 3 隻！</div>
+    </div>
+
+    <div class="status-row">
+      <div class="status-indicator" id="status-light"></div>
+      <span id="status-text">動態階段：各異生體於掩埋場正常蛇行、中央雙體盤旋戒備</span>
+    </div>
+  </div>
+
+  <!-- Help HUD -->
+  <div class="hud hud-help">
+    <div>🌪️ <span class="kbd">M</span>：中央兩隻<strong>解構零件＋龍捲風纏繞＋交換出第3隻</strong></div>
+    <div>💥 <span class="kbd">X</span>：切換外殼<strong>不規則零件拆散 / 聚攏</strong></div>
+    <div>⚡ <span class="kbd">空白鍵 (Space)</span>：巡弋體直身鎖定<strong>撞散垃圾堆</strong></div>
+    <div>🧹 <span class="kbd">R</span>：重整垃圾堆 / 重置中央繁衍風暴</div>
+    <div>🎥 <span class="kbd">C</span>：切換鏡頭（軌道 / 伴行追蹤 / 中央特寫）</div>
+    <div>🖱️ <strong>滑鼠左鍵拖曳</strong>：旋轉 3D 視角 / 滾輪縮放</div>
+  </div>
+
+  <!-- Interactive Controls Toolbar -->
+  <div class="hud-controls">
+    <button class="btn vortex-btn" id="btn-fusion" title="中央兩隻身體解構、高速纏繞成龍捲風並交換零件誕生第三隻">
+      🌪️ 龍捲風零件交換繁衍 (M)
+    </button>
+    <button class="btn primary" id="btn-ram" title="令巡弋異生體直身衝撞撞散垃圾堆">
+      ⚡ 巡弋體大力衝撞 (Space)
+    </button>
+    <button class="btn" id="btn-split" title="將所有垃圾外殼零件不規則拆散/重組">
+      💥 不規則拆分 (X)
+    </button>
+    <button class="btn" id="btn-reset-piles" title="重整散落的垃圾堆與風暴">
+      🧹 重整生態 (R)
+    </button>
+    <div class="divider"></div>
+    <button class="btn active" id="cam-orbit">自由視角</button>
+    <button class="btn" id="cam-follow">跟隨巡弋</button>
+    <button class="btn" id="cam-center">特寫中央 (Focus)</button>
+    <div class="divider"></div>
+    <button class="btn" id="btn-pause">暫停 / 播放</button>
+  </div>
+
+  <script src="multi_sketch.js"></script>
+</body>
+</html>

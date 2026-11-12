@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>M2 物種：廢棄物異生體 (Trash-born Organism) 3D 網頁原型</title>
+  <title>M2 物種：廢棄物異生體 (Trash-born Organism) 3D 垃圾場生態原型</title>
   <!-- p5.js library with WebGL 3D support -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
   <style>
@@ -17,7 +17,7 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background-color: #0d0e12;
+      background-color: #0c0b0e;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       color: #e0e0e6;
     }
@@ -38,13 +38,18 @@
     .hud-header {
       top: 20px;
       left: 24px;
-      background: rgba(18, 20, 26, 0.82);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: rgba(18, 16, 20, 0.85);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
       border-radius: 12px;
       padding: 16px 20px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
-      max-width: 380px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.55);
+      max-width: 420px;
+    }
+    .badge-group {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
     }
     .badge {
       display: inline-block;
@@ -56,11 +61,14 @@
       border-radius: 4px;
       background: #3b4252;
       color: #eceff4;
-      margin-bottom: 8px;
     }
     .badge.phase {
       background: #81a1c1;
       color: #2e3440;
+    }
+    .badge.tag {
+      background: #d08770;
+      color: #24140e;
     }
     h1 {
       font-size: 18px;
@@ -71,9 +79,32 @@
     }
     p.desc {
       font-size: 12px;
-      color: #9aa2b5;
-      line-height: 1.5;
+      color: #aab2c5;
+      line-height: 1.55;
       margin-bottom: 8px;
+    }
+    .materials-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+      margin-bottom: 6px;
+      font-size: 11px;
+    }
+    .mat-chip {
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .mat-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
     }
     .status-row {
       display: flex;
@@ -96,22 +127,22 @@
       bottom: 24px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(18, 20, 26, 0.88);
-      backdrop-filter: blur(12px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(18, 16, 22, 0.9);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
       border-radius: 40px;
-      padding: 8px 14px;
+      padding: 8px 16px;
       display: flex;
       align-items: center;
-      gap: 12px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+      gap: 10px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.65);
       pointer-events: auto;
     }
     .btn {
-      background: #2e3440;
-      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: #2b2e38;
+      border: 1px solid rgba(255, 255, 255, 0.12);
       color: #e5e9f0;
-      padding: 8px 18px;
+      padding: 8px 16px;
       border-radius: 30px;
       font-size: 13px;
       font-weight: 600;
@@ -120,9 +151,10 @@
       align-items: center;
       gap: 6px;
       transition: all 0.2s ease;
+      white-space: nowrap;
     }
     .btn:hover {
-      background: #434c5e;
+      background: #3e4454;
       transform: translateY(-1px);
     }
     .btn.primary {
@@ -147,17 +179,17 @@
     .hud-help {
       top: 20px;
       right: 24px;
-      background: rgba(18, 20, 26, 0.7);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(18, 16, 22, 0.75);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 10px;
       padding: 12px 16px;
       font-size: 12px;
-      color: #8c95a6;
-      line-height: 1.6;
+      color: #9ba4b8;
+      line-height: 1.65;
     }
     .kbd {
-      background: rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.14);
       padding: 2px 6px;
       border-radius: 4px;
       font-family: monospace;
@@ -171,12 +203,24 @@
 
   <!-- Header HUD -->
   <div class="hud hud-header">
-    <span class="badge">NTHU OOP · M2 物種原型</span>
-    <span class="badge phase" id="badge-phase">地面蛇行中</span>
-    <h1>星際垃圾拼裝異生體 (Scrap Assemblage)</h1>
+    <div class="badge-group">
+      <span class="badge">NTHU OOP · M2 物種原型</span>
+      <span class="badge tag">垃圾場生態圈</span>
+      <span class="badge phase" id="badge-phase">地面蛇行中</span>
+    </div>
+    <h1>垃圾碎屑拼裝異生體 (Trash Debris Assemblage)</h1>
     <p class="desc">
-      由廢棄星際沈積層的廢鐵板、破水管、機械鋼梁拼湊而成的非發光生物。具備<strong>不規則拆分解構</strong>與<strong>極速直矛破城衝撞</strong>特性。
+      身軀由<strong>鏽蝕瓦楞板、紅磚頭、尖銳玻璃碎片、壓扁鋁罐、廢輪胎皮與電路板</strong>等垃圾拼湊而成。遊蕩於垃圾山之間，具備<strong>零件不規則解構</strong>與<strong>直身極速撞散垃圾堆</strong>之習性。
     </p>
+
+    <div class="materials-legend">
+      <div class="mat-chip"><span class="mat-dot" style="background:#bf583b"></span>紅磚/水泥塊</div>
+      <div class="mat-chip"><span class="mat-dot" style="background:#32c882"></span>碎玻璃尖角</div>
+      <div class="mat-chip"><span class="mat-dot" style="background:#b87333"></span>鏽鐵瓦楞板</div>
+      <div class="mat-chip"><span class="mat-dot" style="background:#e04040"></span>易開罐/油桶</div>
+      <div class="mat-chip"><span class="mat-dot" style="background:#333538"></span>橡膠輪胎皮</div>
+    </div>
+
     <div class="status-row">
       <div class="status-indicator" id="status-light"></div>
       <span id="status-text">動態階段：地面 S 型蛇行巡弋</span>
@@ -186,23 +230,27 @@
   <!-- Help HUD -->
   <div class="hud hud-help">
     <div>🖱️ <strong>滑鼠左鍵拖曳</strong>：旋轉 3D 視角 / 滾輪縮放</div>
-    <div>💥 <span class="kbd">X</span>：切換<strong>不規則身體拆分 / 聚合</strong></div>
-    <div>⚡ <span class="kbd">空白鍵 (Space)</span>：直身鎖定並極速衝撞</div>
+    <div>💥 <span class="kbd">X</span>：切換<strong>不規則外殼零件拆分 / 聚合</strong></div>
+    <div>⚡ <span class="kbd">空白鍵 (Space)</span>：直身鎖定並極速<strong>撞散垃圾堆</strong></div>
+    <div>🧹 <span class="kbd">R</span>：重新堆整所有垃圾堆</div>
     <div>🎥 <span class="kbd">C</span>：切換鏡頭視角</div>
   </div>
 
   <!-- Interactive Controls Toolbar -->
   <div class="hud-controls">
-    <button class="btn primary" id="btn-ram" title="立即鎖緊身體並直身衝撞">
-      ⚡ 立即大力衝撞 (Space)
+    <button class="btn primary" id="btn-ram" title="立即鎖緊身體並直身衝撞垃圾堆">
+      ⚡ 立即極速撞散 (Space)
     </button>
-    <button class="btn" id="btn-split" title="將垃圾身體不規則拆散/重組">
+    <button class="btn" id="btn-split" title="將各類垃圾外殼不規則拆散/重組">
       💥 不規則拆分 (X)
+    </button>
+    <button class="btn" id="btn-reset-piles" title="重整散落的垃圾堆">
+      🧹 重整垃圾堆 (R)
     </button>
     <div class="divider"></div>
     <button class="btn active" id="cam-orbit">自由視角 (Orbit)</button>
     <button class="btn" id="cam-follow">跟隨視角 (Follow)</button>
-    <button class="btn" id="cam-action">特寫視角 (Cinematic)</button>
+    <button class="btn" id="cam-action">特寫特寫 (Cinematic)</button>
     <div class="divider"></div>
     <button class="btn" id="btn-pause">暫停 / 播放</button>
   </div>

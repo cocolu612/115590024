@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>M2 物種：主角 1/2/3 切換與多角度特寫 (Cinematic Protagonist & Multi-Angle C)</title>
+  <!-- p5.js library with WebGL 3D support -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.4/p5.min.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #0c0b0e;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: #e0e0e6;
+    }
+    #canvas-container {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+    /* UI Overlay */
+    .hud {
+      position: absolute;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .hud-header {
+      top: 20px;
+      left: 24px;
+      background: rgba(18, 16, 24, 0.92);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 14px;
+      padding: 16px 22px;
+      box-shadow: 0 8px 36px rgba(0, 0, 0, 0.65);
+      max-width: 490px;
+    }
+    .badge-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: #3b4252;
+      color: #eceff4;
+    }
+    .badge.protagonist {
+      background: #5e81ac;
+      color: #eceff4;
+      font-weight: 800;
+      transition: all 0.3s;
+    }
+    .badge.camera {
+      background: #88c0d0;
+      color: #242933;
+      font-weight: 800;
+      transition: all 0.3s;
+    }
+    .badge.vortex {
+      background: #b48ead;
+      color: #231828;
+    }
+    h1 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #eceff4;
+      margin-bottom: 6px;
+      letter-spacing: 0.5px;
+    }
+    p.desc {
+      font-size: 12px;
+      color: #aab2c5;
+      line-height: 1.55;
+      margin-bottom: 8px;
+    }
+    /* Protagonist buttons bar */
+    .protagonist-bar {
+      display: flex;
+      gap: 6px;
+      margin: 8px 0;
+    }
+    .p-btn {
+      flex: 1;
+      padding: 7px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(43, 46, 56, 0.88);
+      color: #d8dee9;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      pointer-events: auto;
+      transition: all 0.2s;
+    }
+    .p-btn:hover {
+      background: #434c5e;
+      transform: translateY(-1px);
+    }
+    .p-btn.active {
+      background: #5e81ac;
+      border-color: #88c0d0;
+      color: #fff;
+      box-shadow: 0 0 14px rgba(136, 192, 208, 0.45);
+    }
+    .p-btn .kbd-hint {
+      font-size: 10px;
+      opacity: 0.8;
+      font-family: monospace;
+    }
+    .status-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 8px;
+      font-size: 12.5px;
+      font-weight: 600;
+    }
+    .status-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #88c0d0;
+      box-shadow: 0 0 8px #88c0d0;
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    /* Floating action toolbar */
+    .hud-controls {
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(18, 16, 24, 0.94);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 40px;
+      padding: 8px 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 10px 42px rgba(0, 0, 0, 0.7);
+      pointer-events: auto;
+    }
+    .btn {
+      background: #2b2e38;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #e5e9f0;
+      padding: 7px 15px;
+      border-radius: 30px;
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .btn:hover {
+      background: #3e4454;
+      transform: translateY(-1px);
+    }
+    .btn.primary {
+      background: #bf616a;
+      border-color: #d08770;
+      color: #fff;
+    }
+    .btn.primary:hover {
+      background: #d08770;
+    }
+    .btn.vortex-btn {
+      background: #8f5d96;
+      border-color: #b48ead;
+      color: #fff;
+    }
+    .btn.vortex-btn:hover {
+      background: #b48ead;
+      color: #24142a;
+    }
+    .btn.cam-btn.active {
+      background: #88c0d0;
+      color: #242933;
+      border-color: #88c0d0;
+      font-weight: 700;
+    }
+    .divider {
+      width: 1px;
+      height: 24px;
+      background: rgba(255, 255, 255, 0.15);
+    }
+    /* Instructions top right */
+    .hud-help {
+      top: 20px;
+      right: 24px;
+      background: rgba(18, 16, 22, 0.88);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 14px 18px;
+      font-size: 12px;
+      color: #9ba4b8;
+      line-height: 1.7;
+      max-width: 340px;
+    }
+    .kbd {
+      background: rgba(255, 255, 255, 0.15);
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-family: monospace;
+      color: #eceff4;
+      font-weight: bold;
+    }
+    .kbd.hotkey {
+      background: #5e81ac;
+      color: #eceff4;
+      font-weight: 800;
+    }
+    .kbd.camkey {
+      background: #88c0d0;
+      color: #242933;
+      font-weight: 800;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+
+  <!-- Header HUD -->
+  <div class="hud hud-header">
+    <div class="badge-group">
+      <span class="badge">NTHU OOP · M2 運鏡核心</span>
+      <span class="badge protagonist" id="badge-protag">主角：全體全景</span>
+      <span class="badge camera" id="badge-cam">視角：自由軌道 (Orbit)</span>
+      <span class="badge vortex" id="badge-fusion">中央守護中</span>
+    </div>
+    <h1>垃圾碎屑異生體 · 主角切換與多角度特寫 (C)</h1>
+    <p class="desc">
+      按 <kbd class="hotkey">1</kbd>、<kbd class="hotkey">2</kbd>、<kbd class="hotkey">3</kbd> 將<strong>主角切換為該編號生物</strong>（畫面僅保留該主角）；按 <kbd class="hotkey">0</kbd> <strong>切換成全部生物都出現</strong>；按 <kbd class="camkey">C</kbd> <strong>切換特寫角度</strong>（鏡頭已拉遠留出至少 2 個身位流空）；按 <kbd>R</kbd> <strong>重整場景垃圾堆，僅編號 3 變回兩隻（生物不回初始位置）</strong>；原黑色長方體已全面化為真實垃圾堆！
+    </p>
+
+    <!-- Protagonist Quick Selector -->
+    <div class="protagonist-bar">
+      <button class="p-btn" id="pbtn-1" title="主角切換為單獨移動生物">
+        <span>① 獨行者主角</span>
+        <span class="kbd-hint">[ 按 1 ]</span>
+      </button>
+      <button class="p-btn" id="pbtn-2" title="主角切換為一起移動的兩隻生物">
+        <span>② 伴行雙體主角</span>
+        <span class="kbd-hint">[ 按 2 ]</span>
+      </button>
+      <button class="p-btn" id="pbtn-3" title="主角切換為中央旋轉的兩隻生物">
+        <span>③ 旋轉雙體主角</span>
+        <span class="kbd-hint">[ 按 3 ]</span>
+      </button>
+      <button class="p-btn active" id="pbtn-all" title="切換為全部生物都出現的鏡頭">
+        <span>全部生物出現</span>
+        <span class="kbd-hint">[ 按 0 ]</span>
+      </button>
+    </div>
+
+    <div class="status-row">
+      <div class="status-indicator" id="status-light"></div>
+      <span id="status-text">當前畫面：全景視角，顯示全場 5 隻異生體</span>
+    </div>
+  </div>
+
+  <!-- Help HUD -->
+  <div class="hud hud-help">
+    <div><span class="kbd hotkey">1</span> / <span class="kbd hotkey">2</span> / <span class="kbd hotkey">3</span>：<strong>切換主角</strong>（畫面僅保留該主角）</div>
+    <div><span class="kbd hotkey">0</span>：<strong>全部生物出現</strong>（切換全景全體鏡頭）</div>
+    <div><span class="kbd camkey">C</span>：<strong>切換特寫角度</strong>（身後跟隨 / 迎面特寫 / 軌道環繞，已拉遠保留 2 個身位空間）</div>
+    <div><span class="kbd">R</span>：<strong>重整場景與風暴</strong>（垃圾堆重整、編號 3 變回兩隻，生物不回起點）</div>
+    <div><span class="kbd">M</span>：中央兩隻<strong>零件解構＋高速龍捲風纏繞＋繁衍第3隻</strong></div>
+    <div><span class="kbd">空白鍵</span>：巡弋體直身鎖定<strong>撞散垃圾堆</strong></div>
+    <div><span class="kbd">X</span>：切換外殼零件<strong>不規則解構 / 聚攏</strong></div>
+  </div>
+
+  <!-- Interactive Controls Toolbar -->
+  <div class="hud-controls">
+    <button class="btn cam-btn active" id="cam-orbit" title="軌道自由環繞角度">
+      🎥 自由軌道 (Orbit)
+    </button>
+    <button class="btn cam-btn" id="cam-follow" title="身後緊隨特寫角度 (拉遠留空)">
+      🎯 身後跟隨 (Follow)
+    </button>
+    <button class="btn cam-btn" id="cam-action" title="正前方迎面特寫角度 (拉遠留空)">
+      🎬 迎面特寫 (Front)
+    </button>
+    <div class="divider"></div>
+    <button class="btn vortex-btn" id="btn-fusion" title="中央兩隻身體解構、高速纏繞成龍捲風並交換零件誕生第三隻">
+      🌪️ 龍捲風繁衍 (M)
+    </button>
+    <button class="btn primary" id="btn-ram" title="令巡弋異生體直身衝撞撞散垃圾堆">
+      ⚡ 衝撞 (Space)
+    </button>
+    <button class="btn" id="btn-split" title="外殼零件不規則拆散/重組">
+      💥 拆分 (X)
+    </button>
+    <button class="btn" id="btn-reset" title="重整場景垃圾堆，編號 3 變回兩隻（生物不回初始位置）">
+      🧹 重整場景 (R)
+    </button>
+    <div class="divider"></div>
+    <button class="btn" id="btn-pause">暫停 / 播放</button>
+  </div>
+
+  <script src="focus_sketch.js"></script>
+</body>
+</html>
