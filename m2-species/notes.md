@@ -35,6 +35,7 @@
 
 1. **Blender 3D 骨架與高精度動態模型**：
    - 檔案：[`trash_creature.blend`](trash_creature.blend)
+   - 連結:https://cocolu612.github.io/115590024/m2-species/focus.html
    - 內容：在 Blender 5.2 中建立的 8 節鉸接裝甲軀體、尖錐破城槌頭部、8 骨關節骨架（Armature）綁定、權重繪製，以及完整的「S型地面蛇行（Frame 1-55）➔ 直線鎖定（Frame 56-70）➔ 極速衝撞（Frame 71-88）」關鍵影格動畫。
 2. **p5.js 3D WebGL 互動網頁原型**：
    - 檔案：[`index.html`](index.html) 與 [`sketch.js`](sketch.js)
